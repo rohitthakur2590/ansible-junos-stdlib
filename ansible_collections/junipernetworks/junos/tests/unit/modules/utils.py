@@ -1,3 +1,4 @@
+"""Utility functions for Junos collection unit tests"""
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -22,6 +23,10 @@ def set_module_args(args):
     
     args_json = json.dumps({"ANSIBLE_MODULE_ARGS": args})
     basic._ANSIBLE_ARGS = to_bytes(args_json)
+    
+    # CRITICAL FIX for Ansible 2.19+: Set the serialization profile
+    # Without this, Ansible 2.19 raises "No serialization profile was specified"
+    basic._ANSIBLE_PROFILE = "default"
 
 
 class AnsibleExitJson(Exception):
