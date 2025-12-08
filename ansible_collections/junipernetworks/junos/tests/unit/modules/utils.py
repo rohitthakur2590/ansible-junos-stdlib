@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-
 __metaclass__ = type
 import json
 
@@ -10,6 +9,12 @@ from unittest.mock import patch
 from ansible.module_utils import basic
 from ansible.module_utils._text import to_bytes
 
+def _fake_load_params(self):
+    if basic._ANSIBLE_ARGS:
+        encoded_args = basic._ANSIBLE_ARGS.decode('utf-8')
+        self.params = json.loads(encoded_args).get("ANSIBLE_MODULE_ARGS", {})
+    else:
+        self.params = {}
 
 def set_module_args(args):
     if "_ansible_remote_tmp" not in args:
@@ -19,7 +24,6 @@ def set_module_args(args):
 
     args = json.dumps({"ANSIBLE_MODULE_ARGS": args})
     basic._ANSIBLE_ARGS = to_bytes(args)
-    basic._ANSIBLE_PROFILE = {'mock': 'mock'}
 
 
 class AnsibleExitJson(Exception):
@@ -47,6 +51,7 @@ class ModuleTestCase(TestCase):
             basic.AnsibleModule,
             exit_json=exit_json,
             fail_json=fail_json,
+            _load_params=_fake_load_params,
         )
         self.mock_module.start()
         self.mock_sleep = patch("time.sleep")
