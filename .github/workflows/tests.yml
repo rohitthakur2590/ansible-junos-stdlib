@@ -197,6 +197,141 @@ jobs:
           else
             echo "No unit tests directory found, skipping"
           fi
+  # Tests for junipernetworks.junos collection (to be archived)
+  junipernetworks-junos-sanity:
+    name: Sanity Tests (junipernetworks.junos)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.10"
+            ansible: "2.17"
+          - python: "3.11"
+            ansible: "2.17"
+          - python: "3.11"
+            ansible: "2.18"
+          - python: "3.11"
+            ansible: "2.19"
+          - python: "3.12"
+            ansible: "2.17"
+          - python: "3.12"
+            ansible: "2.18"
+          - python: "3.12"
+            ansible: "2.19"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "${{ matrix.python }}"
+      - name: "Install tox-ansible, includes tox"
+        run: python -m pip install tox-ansible
+      - name: "Check for tox-ansible.ini file, else add default"
+        uses: ansible/ansible-content-actions/.github/actions/add_tox_ansible@main
+      - name: Copy tox-ansible.ini to collection directory
+        run: |
+          if [ -f tox-ansible.ini ]; then
+            cp tox-ansible.ini ansible_collections/junipernetworks/junos/
+          fi
+      - name: Run tox sanity tests
+        working-directory: ansible_collections/junipernetworks/junos
+        run: >-
+          python -m tox --ansible -e sanity-py${{ matrix.python }}-${{ matrix.ansible }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+  junipernetworks-junos-unit-galaxy:
+    name: Unit Tests (junipernetworks.junos - Galaxy)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.10"
+            ansible: "2.17"
+          - python: "3.11"
+            ansible: "2.17"
+          - python: "3.11"
+            ansible: "2.18"
+          - python: "3.11"
+            ansible: "2.19"
+          - python: "3.12"
+            ansible: "2.17"
+          - python: "3.12"
+            ansible: "2.18"
+          - python: "3.12"
+            ansible: "2.19"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: "${{ github.event.pull_request.head.ref }}"
+          repository: "${{ github.event.pull_request.head.repo.full_name }}"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "${{ matrix.python }}"
+      - name: "Install tox-ansible, includes tox"
+        run: python -m pip install tox-ansible
+      - name: "Check for tox-ansible.ini file, else add default"
+        uses: ansible/ansible-content-actions/.github/actions/add_tox_ansible@main
+      - name: Copy tox-ansible.ini to collection directory
+        run: |
+          if [ -f tox-ansible.ini ]; then
+            cp tox-ansible.ini ansible_collections/junipernetworks/junos/
+          fi
+      - name: Run tox unit tests
+        working-directory: ansible_collections/junipernetworks/junos
+        run: >-
+          python -m tox --ansible -e unit-py${{ matrix.python }}-${{ matrix.ansible }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+  junipernetworks-junos-integration:
+    name: Integration Tests (junipernetworks.junos)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: "3.11"
+            ansible: "2.17"
+          - python: "3.12"
+            ansible: "2.19"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "${{ matrix.python }}"
+      - name: "Install tox-ansible, includes tox"
+        run: python -m pip install tox-ansible
+      - name: "Check for tox-ansible.ini file, else add default"
+        uses: ansible/ansible-content-actions/.github/actions/add_tox_ansible@main
+      - name: Copy tox-ansible.ini to collection directory
+        run: |
+          if [ -f tox-ansible.ini ]; then
+            cp tox-ansible.ini ansible_collections/junipernetworks/junos/
+          fi
+      - name: Install collection dependencies
+        working-directory: ansible_collections/junipernetworks/junos
+        run: |
+          ansible-galaxy collection install -r requirements.txt || true
+          ansible-galaxy collection install git+https://github.com/ansible-collections/ansible.utils.git
+          ansible-galaxy collection install git+https://github.com/ansible-collections/ansible.netcommon.git
+          # Install juniper.device dependency
+          ansible-galaxy collection install git+https://github.com/Juniper/ansible-junos-stdlib.git,ansible_collections/juniper/device || true
+      - name: Run tox network-integration tests
+        working-directory: ansible_collections/junipernetworks/junos
+        run: >-
+          python -m tox --ansible -e network-integration-py${{ matrix.python }}-${{ matrix.ansible }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        continue-on-error: true
   all_green:
     if: ${{ always() && (github.event_name != 'schedule') }}
     needs:
@@ -206,6 +341,9 @@ jobs:
       - unit-galaxy
       - ansible-lint
       - unit-source
+      - junipernetworks-junos-sanity
+      - junipernetworks-junos-unit-galaxy
+      - junipernetworks-junos-integration
     runs-on: ubuntu-latest
     steps:
       - run: >-
@@ -216,5 +354,8 @@ jobs:
           '${{ needs.sanity.result }}',
           '${{ needs.unit-galaxy.result }}',
           '${{ needs.ansible-lint.result }}',
-          '${{ needs.unit-source.result }}'
+          '${{ needs.unit-source.result }}',
+          '${{ needs.junipernetworks-junos-sanity.result }}',
+          '${{ needs.junipernetworks-junos-unit-galaxy.result }}',
+          '${{ needs.junipernetworks-junos-integration.result }}'
           ])"

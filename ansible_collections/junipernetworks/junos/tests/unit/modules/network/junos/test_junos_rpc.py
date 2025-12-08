@@ -28,7 +28,7 @@ except ImportError:
 
 from unittest.mock import patch
 
-from ansible_collections.junipernetworks.junos.plugins.modules import junos_rpc
+from ansible_collections.juniper.device.plugins.modules import junos_rpc
 from ansible_collections.junipernetworks.junos.tests.unit.modules.utils import set_module_args
 
 from .junos_module import TestJunosModule, load_fixture
@@ -63,7 +63,7 @@ class TestJunosCommandModule(TestJunosModule):
         self.netconf_rpc = self.mock_netconf_rpc.start()
 
         self.mock_exec_rpc = patch(
-            "ansible_collections.junipernetworks.junos.plugins.modules.junos_rpc.exec_rpc",
+            "ansible_collections.juniper.device.plugins.modules.junos_rpc.exec_rpc",
         )
         self.exec_rpc = self.mock_exec_rpc.start()
 

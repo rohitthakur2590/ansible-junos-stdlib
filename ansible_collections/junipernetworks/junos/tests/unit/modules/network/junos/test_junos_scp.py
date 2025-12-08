@@ -40,31 +40,40 @@ modules = {
 module_patcher = patch.dict("sys.modules", modules)
 module_patcher.start()
 
-from ansible_collections.junipernetworks.junos.plugins.modules import junos_scp
+# junos_scp module was removed from juniper.device collection
+# This test file is kept for historical reference but tests are disabled
+# from ansible_collections.juniper.device.plugins.modules import junos_scp
+
+import pytest
+
+pytestmark = pytest.mark.skip(reason="junos_scp module was removed from juniper.device collection")
 
 
 class TestJunosScpModule(TestJunosModule):
-    module = junos_scp
+    # junos_scp module was removed, skipping tests
+    module = None
 
     def setUp(self):
         super(TestJunosScpModule, self).setUp()
-        self.mock_get_device = patch(
-            "ansible_collections.junipernetworks.junos.plugins.modules.junos_scp.get_device",
-        )
-        self.get_device = self.mock_get_device.start()
+        # junos_scp module was removed, skipping mocks
+        # self.mock_get_device = patch(
+        #     "ansible_collections.juniper.device.plugins.modules.junos_scp.get_device",
+        # )
+        # self.get_device = self.mock_get_device.start()
 
-        self.mock_scp = patch(
-            "ansible_collections.junipernetworks.junos.plugins.modules.junos_scp.SCP",
-        )
-        self.scp = self.mock_scp.start()
+        # self.mock_scp = patch(
+        #     "ansible_collections.juniper.device.plugins.modules.junos_scp.SCP",
+        # )
+        # self.scp = self.mock_scp.start()
 
-        self.scp_mock = MagicMock()
-        self.scp().__enter__.return_value = self.scp_mock
+        # self.scp_mock = MagicMock()
+        # self.scp().__enter__.return_value = self.scp_mock
 
     def tearDown(self):
         super(TestJunosScpModule, self).tearDown()
-        self.mock_get_device.stop()
-        self.mock_scp.stop()
+        # junos_scp module was removed, skipping cleanup
+        # self.mock_get_device.stop()
+        # self.mock_scp.stop()
 
     def test_junos_scp_src(self):
         set_module_args(dict(src="test.txt"))
