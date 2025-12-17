@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 import collections
 import json
+import q
 
 from contextlib import contextmanager
 from copy import deepcopy
@@ -334,7 +335,11 @@ def get_diff(module, rollback="0"):
 
     output = reply.find(".//configuration-output")
     if output is not None:
-        return to_text(output.text, encoding="latin-1").strip()
+        diff_text = to_text(output.text, encoding="latin-1").strip()
+        if not diff_text:
+            return None
+        return diff_text
+    return None
 
 
 def load_config(module, candidate, warnings, action="merge", format="xml"):
