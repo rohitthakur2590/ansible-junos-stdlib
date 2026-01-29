@@ -1,6 +1,15 @@
 ---
 requires_ansible: ">=2.15.0"
 plugin_routing:
+  action:
+    junos:
+      redirect: juniper.device.junos
+  netconf:
+    junos:
+      redirect: juniper.device.junos
+  cliconf:
+    junos:
+      redirect: juniper.device.junos
   modules:
     junos_acl_interfaces:
       redirect: juniper.device.junos_acl_interfaces
@@ -9,6 +18,8 @@ plugin_routing:
     junos_command:
       redirect: juniper.device.junos_command
     junos_config:
+      redirect: juniper.device.junos_config
+    config:
       redirect: juniper.device.junos_config
     junos_facts:
       redirect: juniper.device.junos_facts
